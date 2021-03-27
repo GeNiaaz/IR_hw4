@@ -1,0 +1,25 @@
+(The order within each category does not imply importance within that category)
+
+Most important
+SG Court of Appeal
+SG Privy Council
+UK House of Lords
+UK Supreme Court
+High Court of Australia
+CA Supreme Court
+
+?Important?
+SG High Court
+Singapore International Commercial Court
+HK High Court
+HK Court of First Instance
+UK Crown Court
+UK Court of Appeal
+UK High Court
+Federal Court of Australia
+NSW Court of Appeal
+NSW Court of Criminal Appeal
+NSW Supreme Court
+
+The rest
+Other courts in the data set, but not listed in the above.
