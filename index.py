@@ -5,6 +5,9 @@ import csv
 from whoosh import index
 from whoosh.fields import Schema, TEXT, KEYWORD, ID, STORED, DATETIME
 
+def usage():
+    print("usage: python3 " + sys.argv[0] + " -i dataset-file")
+
 def build_index(dataset, output_file_dictionary, output_file_postings):
     print("Indexing dataset...")
 
@@ -52,7 +55,7 @@ for o, a in opts:
 
 if dataset == None:
 #if input_directory == None or output_file_postings == None or output_file_dictionary == None:
-    print("Please specify input parameters.")
+    usage()
     sys.exit(2)
 
 build_index(dataset, output_file_dictionary, output_file_postings)
