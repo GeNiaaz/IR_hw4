@@ -5,10 +5,12 @@ import csv
 from whoosh import index
 from whoosh.fields import Schema, TEXT, KEYWORD, ID, STORED, DATETIME
 
+
 def usage():
     print("usage: python3 " + sys.argv[0] + " -i dataset-file")
 
-def build_index(dataset, output_file_dictionary, output_file_postings):
+
+def build_index(dataset_file, output_file_dictionary, output_file_postings):
     print("Indexing dataset...")
 
     schema = Schema(document_id=ID(stored=True), title=KEYWORD,
@@ -21,15 +23,15 @@ def build_index(dataset, output_file_dictionary, output_file_postings):
     writer = ix.writer()
 
     csv.field_size_limit(sys.maxsize)
-    with open('sample.csv') as dataset:
+    with open(dataset_file) as dataset:
         dataset_reader = csv.reader(dataset, delimiter=',')
-        line_count = 0
+        counter = 0
+        # total = sum(1 for row in dataset_reader)
+        total = 17154
         for row in dataset_reader:
-            if line_count != 14:
-                writer.add_document(document_id=row[0], title=row[1], content=row[2], date_posted=row[3], court=row[4])
-                line_count += 1
-            else:
-                break
+            counter += 1
+            print(counter, "/", total)
+            writer.add_document(document_id=row[0], title=row[1], content=row[2], date_posted=row[3], court=row[4])
 
     writer.commit()
 
