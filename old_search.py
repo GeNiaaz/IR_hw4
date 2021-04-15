@@ -5,8 +5,10 @@ import getopt
 from whoosh import index
 from whoosh.qparser import QueryParser
 
+
 def usage():
     print("usage: python3 " + sys.argv[0] + " -q file-of-queries -o output-file-of-results")
+
 
 def run_search(query_file, output_file):
     print("Searching documents...")
