@@ -1,43 +1,67 @@
-import os
 import sys
 import getopt
 import csv
-from whoosh import index
-from whoosh.fields import Schema, TEXT, KEYWORD, ID, STORED, DATETIME
+import pickle
+import nltk
+import Stemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
 
+stemmer = Stemmer.Stemmer("english")
+class TfidfStemVectorizer(TfidfVectorizer):
+    def __init__(self):
+        super().__init__(self, ngram_range=(1,3))
+        self.analyze = super().build_analyzer()
+    def build_analyzer(self):
+        return lambda doc: (stemmer.stemWord(word) for word in self.analyze(doc))
 
 def usage():
-    print("usage: python3 " + sys.argv[0] + " -i dataset-file")
+    print("usage: " + sys.argv[0] + " -i dataset-file -d dictionary-file -p postings-file")
 
+def build_index(in_dir, out_dict, out_postings):
+    warning_check = input("are you sure you want to overwrite your index? y/n ")
+    if warning_check != "y":
+        print("closing...")
+        sys.exit(2)
 
-def build_index(dataset_file, output_file_dictionary, output_file_postings):
-    print("Indexing dataset...")
+    corpus = []
+    docs = []
+    vectorizer = TfidfStemVectorizer()
 
-    schema = Schema(document_id=ID(stored=True), title=KEYWORD,
-                    content=TEXT, date_posted=TEXT, court=KEYWORD)
+    print("processing dataset...")
+    with open('dataset.csv') as dataset:
+        csv.field_size_limit(sys.maxsize)
+        dataset_reader = csv.reader(dataset, delimiter=",")
+        column_no = 1
+        next(dataset) # skip header line
+        for line in dataset_reader:
+            print("\treading line", column_no); column_no += 1
+            doc_id = line[0]
+            title = line[1]
+            text = line[2]
+            date = line[3]
+            court = line[4]
 
-    if not os.path.exists("index-dir"):
-        os.mkdir("index-dir")
+            vectorizer.fit([text])
+            docs.append(doc_id)
+            corpus.append(text)
+        dataset.close()
 
-    ix = index.create_in("index-dir", schema)
-    writer = ix.writer()
+    print("building vector space model...")
+    matrix = vectorizer.transform(corpus)
+    dictionary = vectorizer.vocabulary_
 
-    csv.field_size_limit(sys.maxsize)
-    with open(dataset_file) as dataset:
-        dataset_reader = csv.reader(dataset, delimiter=',')
-        counter = 0
-        # total = sum(1 for row in dataset_reader)
-        total = 17154
-        for row in dataset_reader:
-            counter += 1
-            print(counter, "/", total)
-            writer.add_document(document_id=row[0], title=row[1], content=row[2], date_posted=row[3], court=row[4])
+    print("saving to disk...")
+    with open('postings.txt', 'wb') as postings_file:
+        pickle.dump(matrix, postings_file)
+    with open('dictionary.txt', 'wb') as dict_file:
+        pickle.dump(vectorizer, dict_file)
+    with open('docs.txt', 'wb') as doc_file:
+        pickle.dump(docs, doc_file)
 
-    writer.commit()
+    print("done.")
+    #print(vectorizer.get_feature_names())
 
-    print("Done.")
-
-dataset = output_file_dictionary = output_file_postings = None
+input_directory = output_file_dictionary = output_file_postings = None
 
 try:
     opts, args = getopt.getopt(sys.argv[1:], 'i:d:p:')
@@ -47,7 +71,7 @@ except getopt.GetoptError:
 
 for o, a in opts:
     if o == '-i':  # input directory
-        dataset = a
+        input_directory = a
     elif o == '-d':  # dictionary file
         output_file_dictionary = a
     elif o == '-p':  # postings file
@@ -55,9 +79,8 @@ for o, a in opts:
     else:
         assert False, "unhandled option"
 
-if dataset == None:
-#if input_directory == None or output_file_postings == None or output_file_dictionary == None:
+if input_directory == None or output_file_postings == None or output_file_dictionary == None:
     usage()
     sys.exit(2)
 
-build_index(dataset, output_file_dictionary, output_file_postings)
+build_index(input_directory, output_file_dictionary, output_file_postings)

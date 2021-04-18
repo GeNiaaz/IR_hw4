@@ -1,12 +1,26 @@
-import os
 import sys
-import re
 import getopt
+import csv
+import time
+import pickle
+import nltk
 import numpy as np
+import Stemmer
+from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.metrics.pairwise import cosine_similarity
+from sklearn.neighbors import NearestNeighbors
+
+stemmer = Stemmer.Stemmer("english")
+class TfidfStemVectorizer(TfidfVectorizer):
+    def __init__(self):
+        super().__init__(self, ngram_range=(1, 3))
+        self.analyze = super().build_analyzer()
+
+    def build_analyzer(self):
+        return lambda doc: (stemmer.stemWord(word) for word in self.analyze(doc))
 
 def usage():
-    print("usage: python3 " + sys.argv[0] + " -q file-of-queries -o output-file-of-results")
-
+    print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results")
 
 # alpha beta are args to be adjusted
 # varargs are vectors of docs of inputs from query
@@ -22,36 +36,46 @@ def rocchio_calculation(alpha, beta, query_vec, *doc_vecs):
     final_result_list = final_result.tolist()
     return final_result_list
 
+def run_search(dict_file, postings_file, queries_file, results_file):
+    start_time = time.time()
 
-def parse_query_file(query_f):
-    # Vars to return
-    query = ""
-    list_of_relevance = []
+    print("loading files from disk...")
+    with open(postings_file, "rb") as matrix_file:
+        matrix = pickle.load(matrix_file)
+    with open(dict_file, 'rb') as dict_file:
+        vectorizer = pickle.load(dict_file)
+    with open('docs.txt', 'rb') as doc_file:
+        docs = pickle.load(doc_file)
 
-    # Parsing query file
-    with open(query_f, 'r') as query_readable:
-        raw_input = []
-        for line in query_readable:
-            raw_input.append(line.strip())
+    print("retrieving query...")
+    relevant_cols = []
+    with open(queries_file) as query_file:
+        content = query_file.readlines()
+        query = content[0]
+        for i in range(1, len(content)):
+            relevant_cols.append(docs.index(content[i].strip()))
 
-        query = parse_query(raw_input[0])
-        for a in range(1, len(raw_input)):
-            list_of_relevance.append(raw_input[a])
+    print("finding matching documents...")
+    query_vector = vectorizer.transform([query])
+    cosine_similarities = cosine_similarity(query_vector, matrix).flatten()
+    print(cosine_similarities.shape)
+    result_docs = [docs[doc] for doc in cosine_similarities.argsort()[:-11:-1]]
 
-    return query, list_of_relevance
+    print("writing to file...")
+    with open(results_file, 'w') as output_file:
+        write_string = ""
+        doc_count = 0
+        for doc in result_docs:
+            doc_count += 1
+            write_string += doc
+            if doc_count != len(result_docs):
+                write_string += " "
+        output_file.write(write_string)
 
-# Input: Str
-# Output: A list of queries, these are phrasal / bag of words. Intersection is performed on their results.
-def parse_query(s):
-    queries = s.split(" AND ")
-    return queries
-
-def runsearch(query_file, output_file, dict_file, posting_file):
-
-    query, list_of_relevance = parse_query_file(query_file)
-
-
-if __name__ == '__main__':
+    end_time = time.time()
+    print("done.")
+    print(results_file, "generated.")
+    print("search completed in", round(end_time - start_time, 5), "secs.")
 
     dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 
@@ -73,9 +97,9 @@ if __name__ == '__main__':
         else:
             assert False, "unhandled option"
 
-    if file_of_queries == None or file_of_output == None:
-    #if dictionary_file == None or postings_file == None or file_of_queries == None or file_of_output == None:
-        usage()
-        sys.exit(2)
+if dictionary_file == None or postings_file == None or file_of_queries == None or file_of_output == None:
+    usage()
+    sys.exit(2)
 
-    run_search(file_of_queries, file_of_output, dictionary_file, postings_file)
+run_search(dictionary_file, postings_file, file_of_queries, file_of_output)
+
