@@ -36,6 +36,57 @@ def rocchio_calculation(alpha, beta, query_vec, *doc_vecs):
     final_result_list = final_result.tolist()
     return final_result_list
 
+
+def parse_query_file(query_f):
+    # Vars to return
+    query = ""
+    list_of_relevance = []
+
+    # Parsing query file
+    with open(query_f, 'r') as query_readable:
+        raw_input = []
+        for line in query_readable:
+            raw_input.append(line.strip())
+
+        query = parse_query(raw_input[0])
+        for a in range(1, len(raw_input)):
+            list_of_relevance.append(raw_input[a])
+
+    return query, list_of_relevance
+
+
+def parse_query(s):
+    queries = s.split(" AND ")
+    return queries
+
+
+def process_AND(list_a, list_b):
+    ptr_a = 0
+    ptr_b = 0
+
+    max_index_a = len(list_a)
+    max_index_b = len(list_b)
+
+    resultant_list = []
+
+    while ptr_a < max_index_a and ptr_b < max_index_b:
+        curr_a = list_a[ptr_a]
+        curr_b = list_b[ptr_b]
+
+        if curr_a == curr_b:
+            ptr_a += 1
+            ptr_b += 1
+
+            resultant_list.append(curr_a)
+        else:
+            if curr_a < curr_b:
+                ptr_a += 1
+            else:
+                ptr_b += 1
+
+    return resultant_list
+
+
 def run_search(dict_file, postings_file, queries_file, results_file):
     start_time = time.time()
 
