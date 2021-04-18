@@ -59,6 +59,17 @@ def parse_query(s):
     queries = s.split(" AND ")
     return queries
 
+# '"i am a phrase"' (note the additional single quotes surrounding the string.)
+def is_phrasal(s):
+    return len(s) > 1 and s[0] == '"'
+
+# "hello world"
+def is_bog(s):
+    return not is_phrasal(s)
+
+# "hello world" -> ["hello", "world"]
+def words_bog(bog):
+    return bog.split()
 
 def process_AND(list_a, list_b):
     ptr_a = 0
@@ -127,29 +138,32 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     print(results_file, "generated.")
     print("search completed in", round(end_time - start_time, 5), "secs.")
 
-dictionary_file = postings_file = file_of_queries = output_file_of_results = None
+# This is to allow us to export search.py as a library
+# Otherwise, whenever `search.py` is exported, we will execute the following lines of code.
+# See `search-test.py` for import use.
+if __name__ == "main":
+    dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
-except getopt.GetoptError:
-    usage()
-    sys.exit(2)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
 
-for o, a in opts:
-    if o == '-d':
-        dictionary_file = a
-    elif o == '-p':
-        postings_file = a
-    elif o == '-q':
-        file_of_queries = a
-    elif o == '-o':
-        file_of_output = a
-    else:
-        assert False, "unhandled option"
+    for o, a in opts:
+        if o == '-d':
+            dictionary_file = a
+        elif o == '-p':
+            postings_file = a
+        elif o == '-q':
+            file_of_queries = a
+        elif o == '-o':
+            file_of_output = a
+        else:
+            assert False, "unhandled option"
 
-if dictionary_file == None or postings_file == None or file_of_queries == None or file_of_output == None:
-    usage()
-    sys.exit(2)
+    if dictionary_file == None or postings_file == None or file_of_queries == None or file_of_output == None:
+        usage()
+        sys.exit(2)
 
-run_search(dictionary_file, postings_file, file_of_queries, file_of_output)
-
+    run_search(dictionary_file, postings_file, file_of_queries, file_of_output)

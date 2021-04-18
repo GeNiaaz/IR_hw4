@@ -6,6 +6,8 @@ let
     nltk
     numpy
     getopt
+    scikitlearn
+    PyStemmer
     linecache2
   ];
   python-with-my-packages = python3.withPackages my-python-packages;

@@ -20,6 +20,23 @@ class TestParseQuery(unittest.TestCase):
     def test_phrasal_query_and_bog(self):
         self.assertEqual(parse_query('"phrasal query" AND a bag o\' words'), ['"phrasal query"', "a bag o' words"])
 
+    def test_words_bog(self):
+        self.assertEqual(words_bog("i am bog"), ["i", "am", "bog"])
+
+class TestCheckQuery(unittest.TestCase):
+    def test_is_bog_true(self):
+        self.assertTrue(is_bog("i am bog"))
+
+    def test_is_bog_false(self):
+        self.assertFalse(is_bog('"i am not bog"'))
+
+    def test_is_phrasal_true(self):
+        self.assertTrue(is_phrasal('"i am not bog"'))
+
+    def test_is_phrasal_false(self):
+        self.assertFalse(is_phrasal("i am bog"))
+
+class TestRocchio(unittest.TestCase):
     def test_rocchio_2_docs(self):
         alpha = 1
         beta = 1
@@ -51,6 +68,7 @@ class TestParseQuery(unittest.TestCase):
 
         self.assertEqual(rocchio_calculation(alpha, beta, query_vec, doc_vec_1, doc_vec_2), [17, 19, 21, 23])
 
+class TestResultsIntersection(unittest.TestCase):
     """ Testing the AND thing """
 
     def test_AND(self):
