@@ -7,4 +7,6 @@ dataset.csv
 
 temp-*.*
 
+postings.txt
+
 Pipfile
