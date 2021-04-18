@@ -51,5 +51,14 @@ class TestParseQuery(unittest.TestCase):
 
         self.assertEqual(rocchio_calculation(alpha, beta, query_vec, doc_vec_1, doc_vec_2), [17, 19, 21, 23])
 
+
+    """ Testing the AND thing """
+
+    def test_AND(self):
+        ls1 = [1,2,3,4,5,6,7,8,10]
+        ls2 = [2,4,6,7,9,10]
+
+        self.assertEqual(process_AND(ls1, ls2), [2,4,6,7,10])
+
 if __name__ == '__main__':
     unittest.main()
