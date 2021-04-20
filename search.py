@@ -97,12 +97,54 @@ def process_AND(list_a, list_b):
 
     return resultant_list
 
+postings_cache = {} # Consider caching our pickle readings for postings 
+
+def find_docs_for_phrasal_query(query, dictionary):
+    # Assume query comes with the quotation marks, i.e. => "hello there world" 
+    query_words = query.split()
+    
+    # Find docs containing all query words
+    idf_query_words = [(dictionary[word][0], word) for word in query_words]
+    idf_query_words = set(idf_query_words) # remove duplicates   
+    sorted_idf_query_words = sorted(idf_query_words, reverse=True)   # sort query_words by highest idf (appears in least docs)
+
+    merged_docs = set()
+
+    for (idf, word) in sorted_idf_query_words:
+        if word not in postings_cache: # cache operation
+            # post_file.seek(dictionary[word][1])
+            # postings_cache[word] = pickle.loads(post_file.read(dictionary[word][2]))
+            None
+        else:
+            if (merged_docs == set()): # set merged_docs to the first set of doc_ids
+                # merged_docs = set(postings_cache[word].keys())
+                None
+            else: # find intersection of doc_ids sets, in increasing order of size (since sorted by highest idf) (faster merging)
+                # merged_docs = merged_docs.intersection(set(postings_cache[word].keys()))
+                None
+
+    # Find docs with the exact phrase 
+    result_docs = []
+
+    for doc_id in merged_docs:
+        merged_postitions = set()
+        for (idx, word) in enumerate(query_words):
+            positions = [(position - idx) for position in postings_cache[word][doc_id][1]] # Adjusting the positional index to that of the first query word
+            if (merged_postitions == set()):
+                merged_postitions = set(positions)
+            else:
+                merged_postitions = merged_postitions.intersection(set(positions))
+        
+        if merged_postitions != set():  # Consider adding weights too => larger set == more frequently-appearing phrase == more relevant
+            result_docs.append(doc_id) 
+
+    return result_docs
 
 def run_search(dict_file, postings_file, queries_file, results_file):
     start_time = time.time()
 
     print("loading files from disk...")
-    with open(postings_file, "rb") as matrix_file:
+    with open(postings_file, 'rb') as matrix_file:
         matrix = pickle.load(matrix_file)
     with open(dict_file, 'rb') as dict_file:
         vectorizer = pickle.load(dict_file)
