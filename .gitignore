@@ -13,3 +13,5 @@ temp-*.*
 postings.txt
 
 Pipfile
+
+__pycache__

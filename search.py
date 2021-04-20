@@ -30,6 +30,110 @@ def rocchio_calculation(alpha, beta, query_vec, *doc_vecs):
     final_result_list = final_result.tolist()
     return final_result_list
 
+
+def parse_query_file(query_f):
+    # Vars to return
+    query = ""
+    list_of_relevance = []
+
+    # Parsing query file
+    with open(query_f, 'r') as query_readable:
+        raw_input = []
+        for line in query_readable:
+            raw_input.append(line.strip())
+
+        query = parse_query(raw_input[0])
+        for a in range(1, len(raw_input)):
+            list_of_relevance.append(raw_input[a])
+
+    return query, list_of_relevance
+
+
+def parse_query(s):
+    queries = s.split(" AND ")
+    return queries
+
+# '"i am a phrase"' (note the additional single quotes surrounding the string.)
+def is_phrasal(s):
+    return len(s) > 1 and s[0] == '"'
+
+# "hello world"
+def is_bog(s):
+    return not is_phrasal(s)
+
+# "hello world" -> ["hello", "world"]
+def words_bog(bog):
+    return bog.split()
+
+def process_AND(list_a, list_b):
+    ptr_a = 0
+    ptr_b = 0
+
+    max_index_a = len(list_a)
+    max_index_b = len(list_b)
+
+    resultant_list = []
+
+    while ptr_a < max_index_a and ptr_b < max_index_b:
+        curr_a = list_a[ptr_a]
+        curr_b = list_b[ptr_b]
+
+        if curr_a == curr_b:
+            ptr_a += 1
+            ptr_b += 1
+
+            resultant_list.append(curr_a)
+        else:
+            if curr_a < curr_b:
+                ptr_a += 1
+            else:
+                ptr_b += 1
+
+    return resultant_list
+
+postings_cache = {} # Consider caching our pickle readings for postings 
+
+def find_docs_for_phrasal_query(query, dictionary):
+    # Assume query comes with the quotation marks, i.e. => "hello there world" 
+    query_words = query.split()
+    
+    # Find docs containing all query words
+    idf_query_words = [(dictionary[word][0], word) for word in query_words]
+    idf_query_words = set(idf_query_words) # remove duplicates   
+    sorted_idf_query_words = sorted(idf_query_words, reverse=True)   # sort query_words by highest idf (appears in least docs)
+
+    merged_docs = set()
+
+    for (idf, word) in sorted_idf_query_words:
+        if word not in postings_cache: # cache operation
+            # post_file.seek(dictionary[word][1])
+            # postings_cache[word] = pickle.loads(post_file.read(dictionary[word][2]))
+            None
+        else:
+            if (merged_docs == set()): # set merged_docs to the first set of doc_ids
+                # merged_docs = set(postings_cache[word].keys())
+                None
+            else: # find intersection of doc_ids sets, in increasing order of size (since sorted by highest idf) (faster merging)
+                # merged_docs = merged_docs.intersection(set(postings_cache[word].keys()))
+                None
+
+    # Find docs with the exact phrase 
+    result_docs = []
+
+    for doc_id in merged_docs:
+        merged_postitions = set()
+        for (idx, word) in enumerate(query_words):
+            positions = [(position - idx) for position in postings_cache[word][doc_id][1]] # Adjusting the positional index to that of the first query word
+            if (merged_postitions == set()):
+                merged_postitions = set(positions)
+            else:
+                merged_postitions = merged_postitions.intersection(set(positions))
+        
+        if merged_postitions != set():  # Consider adding weights too => larger set == more frequently-appearing phrase == more relevant
+            result_docs.append(doc_id) 
+
+    return result_docs
+
 def run_search(dict_file, postings_file, queries_file, results_file):
     """
     using the given dictionary file and postings file,
@@ -146,28 +250,32 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     print(results_file, "generated.")
     print("search completed in", round(end_time - start_time, 5), "secs.")
 
-dictionary_file = postings_file = file_of_queries = output_file_of_results = None
+# This is to allow us to export search.py as a library
+# Otherwise, whenever `search.py` is exported, we will execute the following lines of code.
+# See `search-test.py` for import use.
+if __name__ == "main":
+    dictionary_file = postings_file = file_of_queries = output_file_of_results = None
 
-try:
-    opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
-except getopt.GetoptError:
-    usage()
-    sys.exit(2)
+    try:
+        opts, args = getopt.getopt(sys.argv[1:], 'd:p:q:o:')
+    except getopt.GetoptError:
+        usage()
+        sys.exit(2)
 
-for o, a in opts:
-    if o == '-d':
-        dictionary_file  = a
-    elif o == '-p':
-        postings_file = a
-    elif o == '-q':
-        file_of_queries = a
-    elif o == '-o':
-        file_of_output = a
-    else:
-        assert False, "unhandled option"
+    for o, a in opts:
+        if o == '-d':
+            dictionary_file = a
+        elif o == '-p':
+            postings_file = a
+        elif o == '-q':
+            file_of_queries = a
+        elif o == '-o':
+            file_of_output = a
+        else:
+            assert False, "unhandled option"
 
-if dictionary_file == None or postings_file == None or file_of_queries == None or file_of_output == None :
-    usage()
-    sys.exit(2)
+    if dictionary_file == None or postings_file == None or file_of_queries == None or file_of_output == None:
+        usage()
+        sys.exit(2)
 
-run_search(dictionary_file, postings_file, file_of_queries, file_of_output)
+    run_search(dictionary_file, postings_file, file_of_queries, file_of_output)
