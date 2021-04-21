@@ -4,7 +4,6 @@ import getopt
 import csv
 import gzip
 import pickle
-import joblib
 import nltk
 import numpy as np
 import Stemmer
@@ -44,11 +43,11 @@ def run_search(dict_file, postings_file, queries_file, results_file):
 
     print("loading files from disk...")
     with gzip.open(postings_file, 'rb') as post_file:
-        matrix = joblib.load(post_file)
+        matrix = pickle.load(post_file)
     with gzip.open(dict_file, 'rb') as dict_file:
-        vectorizer = joblib.load(dict_file)
+        vectorizer = pickle.load(dict_file)
     with gzip.open('docs.txt', 'rb') as doc_file:
-        docs = joblib.load(doc_file)
+        docs = pickle.load(doc_file)
     with gzip.open('positions.txt', 'rb') as posn_file:
         positions = pickle.load(posn_file)
 

@@ -3,7 +3,6 @@ import getopt
 import csv
 import gzip
 import pickle
-import joblib
 import nltk
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -63,13 +62,13 @@ def build_index(in_dir, out_dict, out_postings):
 
     print("saving to disk...")
     with gzip.open(out_postings, 'wb') as post_file:
-        joblib.dump(matrix, post_file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(matrix, post_file, protocol=pickle.HIGHEST_PROTOCOL)
     with gzip.open(out_dict, 'wb') as dict_file:
-        joblib.dump(vectorizer, dict_file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(vectorizer, dict_file, protocol=pickle.HIGHEST_PROTOCOL)
     with gzip.open('docs.txt', 'wb') as doc_file:
-        joblib.dump(docs, doc_file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(docs, doc_file, protocol=pickle.HIGHEST_PROTOCOL)
     with gzip.open('positions.txt', 'wb') as posn_file:
-        joblib.dump(positions, posn_file, protocol=pickle.HIGHEST_PROTOCOL)
+        pickle.dump(positions, posn_file, protocol=pickle.HIGHEST_PROTOCOL)
 
     print("done.")
     #print(vectorizer.get_feature_names())
