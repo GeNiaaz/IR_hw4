@@ -4,8 +4,10 @@
 tmp/
 
 dataset.csv
+docs.txt
 postings.txt
 dictionary.txt
+positions.txt
 output.txt
 
 temp-*.*
