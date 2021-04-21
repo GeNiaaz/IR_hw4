@@ -14,6 +14,9 @@ nltk/
 getopt/
 numpy/
 sklearn/
+joblib/
+numpy/
+Stemmer/
 
 temp-*.*
 
