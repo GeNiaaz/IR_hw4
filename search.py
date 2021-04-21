@@ -12,14 +12,14 @@ from scipy import mean
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-stemmer = Stemmer.Stemmer("english")
+stemmer = nltk.stem.snowball.SnowballStemmer("english")
 class TfidfStemVectorizer(TfidfVectorizer):
     def __init__(self):
         super().__init__(self, dtype=np.float32, ngram_range=(1, 3))
         self.analyze = super().build_analyzer()
 
     def build_analyzer(self):
-        return lambda doc: (stemmer.stemWord(word) for word in self.analyze(doc))
+        return lambda doc: (stemmer.stem(word) for word in self.analyze(doc))
 
 def usage():
     print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results")
