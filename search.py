@@ -25,16 +25,10 @@ def usage():
 # alpha beta are args to be adjusted
 # varargs are vectors of docs of inputs from query
 def rocchio_calculation(alpha, beta, query_vec, doc_vecs):
-    weighted_query_np = np.multiply(alpha, query_vec)
-    # weighted_query_list = weighted_query_np.tolist()
-
-    # mean_np = np.mean(doc_vecs, axis=0)
+    weighted_query_np = query_vec * alpha
     mean_np = np.mean(doc_vecs, axis=0)
-    weighted_mean_np = np.multiply(beta, mean_np)
-    # weighted_mean_list = weighted_mean_np.tolist()
-
-    final_result = np.sum([weighted_query_np, weighted_mean_np], axis=0)
-    # final_result_list = final_result.tolist()
+    weighted_mean_np = mean_np * beta
+    final_result = weighted_query_np + weighted_mean_np
     return final_result
 
 def run_search(dict_file, postings_file, queries_file, results_file):
@@ -59,16 +53,12 @@ def run_search(dict_file, postings_file, queries_file, results_file):
             relevant_cols.append(docs.index(content[i].strip()))
 
     print("constructing query vector...")
-    relevant_vectors = matrix[relevant_cols,:]
     query_vector = vectorizer.transform([query])
-    # for relev in relevant_cols:
-    #     print(relev)
-    #     vec = matrix[relev]
-    #     relevant_vectors.append(vec)
-    new_query_vec = rocchio_calculation(2, 2, query_vector, relevant_vectors)
+    relevant_vectors = matrix[relevant_cols, :]
+    refined_vector = rocchio_calculation(2.0, 2.0, query_vector, relevant_vectors)
 
     print("finding matching documents...")
-    cosine_similarities = cosine_similarity(new_query_vec, matrix).flatten()
+    cosine_similarities = cosine_similarity(refined_vector, matrix).flatten()
     sorted_cosines = cosine_similarities.argsort()[::-1]
     result_docs = [docs[doc] for doc in sorted_cosines if cosine_similarities[doc] != 0]
     print(len(result_docs), "matching documents found.")
