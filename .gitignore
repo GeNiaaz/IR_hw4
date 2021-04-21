@@ -10,6 +10,11 @@ dictionary.txt
 positions.txt
 output.txt
 
+nltk
+getopt
+numpy
+sklearn
+
 temp-*.*
 
 postings.txt
