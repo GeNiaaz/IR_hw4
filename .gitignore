@@ -10,10 +10,10 @@ dictionary.txt
 positions.txt
 output.txt
 
-nltk
-getopt
-numpy
-sklearn
+nltk/
+getopt/
+numpy/
+sklearn/
 
 temp-*.*
 
