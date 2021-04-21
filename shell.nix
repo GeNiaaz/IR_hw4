@@ -7,6 +7,7 @@ let
     numpy
     getopt
     scikitlearn
+    joblib
     PyStemmer
     linecache2
   ];
