@@ -35,8 +35,6 @@ def rocchio_calculation(alpha, beta, query_vec, doc_vecs):
     weighted_mean_np = np.multiply(beta, mean_np)
     # weighted_mean_list = weighted_mean_np.tolist()
 
-    print("query:", weighted_query_np)
-    print("mean:", weighted_mean_np)
     final_result = np.sum([weighted_query_np, weighted_mean_np], axis=0)
     # final_result_list = final_result.tolist()
     return final_result
