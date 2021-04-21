@@ -3,6 +3,7 @@ import time
 import getopt
 import csv
 import gzip
+import pickle
 import joblib
 import nltk
 import numpy as np
@@ -46,10 +47,8 @@ def run_search(dict_file, postings_file, queries_file, results_file):
         vectorizer = joblib.load(dict_file)
     with gzip.open('docs.txt', 'rb') as doc_file:
         docs = joblib.load(doc_file)
-    """
     with gzip.open('positions.txt', 'rb') as posn_file:
-        positions = joblib.load(posn_file)
-    """
+        positions = pickle.load(posn_file)
 
     print("retrieving query...")
     relevant_cols = []
