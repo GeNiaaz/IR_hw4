@@ -17,6 +17,7 @@ sklearn/
 joblib/
 numpy/
 Stemmer/
+libs/
 
 temp-*.*
 

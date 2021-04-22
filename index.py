@@ -12,6 +12,7 @@ class TfidfStemVectorizer(TfidfVectorizer):
     def __init__(self):
         super().__init__(self, dtype=np.float32)
         self.analyze = super().build_analyzer()
+
     def build_analyzer(self):
         return lambda doc: (stemmer.stem(word) for word in self.analyze(doc))
 
