@@ -119,7 +119,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
         write_to_file(relevant_cols, results_file)
     else:
         query_vector = vectorizer.transform([query])
-        if query_refinement:
+        if query_refinement and len(relevant_cols) != 0:
             relevant_vectors = matrix[relevant_cols, :]
             refined_vector = rocchio_calculation(0.7, 0.3, query_vector, relevant_vectors)
         else:
