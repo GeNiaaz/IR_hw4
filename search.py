@@ -13,6 +13,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # query refinement (Rocchio) and synonym expansion options
 # can be enabled or disabled as per your wish
+# query synonyms left on as we found it helps with accuracy
 query_refinement = False
 query_synonym_expansion = True
 
@@ -87,6 +88,14 @@ def process_query(query, vectorizer, positions):
                 phrases_doc_set = phrasal_docs
             else:
                 phrases_doc_set = set.intersection(phrases_doc_set, phrasal_docs)
+            query = query.split(" ")
+            for j in range(len(query)):
+                term = query[j]
+                if query_synonym_expansion:
+                    term = query_synonym_extension(term, vectorizer)
+                non_phrasal_query += term
+                if not (i == len(queries) - 1 and j == len(query) - 1):
+                    non_phrasal_query += " "
             phrase_count += 1
         else:
             # free text term in query
@@ -117,7 +126,6 @@ def rocchio_calculation(alpha, beta, query_vec, doc_vecs):
 # Capped to 1 synonym per word to minimise leading the query
 # 2xOriginal terms to ensure original terms have higher weightage than synonyms
 def query_synonym_extension(query, vectorizer):
-    print("expanding query with synonyms...")
     # split query up into tokens
     list_of_original_terms = nltk.word_tokenize(query)
     new_query_list = []
@@ -214,7 +222,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
         result_docs = [docs[doc] for doc in sorted_cosines if cosine_similarities[doc] != 0]
 
         if phrases_found: # i.e. phrases were found, intersect results w/ phrase document set
-            result_docs = [doc for doc in result_docs if doc in phrases_doc_list]
+            result_docs.extend([doc for doc in phrases_doc_list if doc not in result_docs])
 
         write_to_file(result_docs, results_file)
 
