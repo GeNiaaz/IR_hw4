@@ -5,12 +5,15 @@ import csv
 import gzip
 import pickle
 import nltk
+from nltk.corpus import wordnet
 import numpy as np
 from scipy import mean
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 query_refinement = False
+query_synonym_expansion = False
+
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 class TfidfStemVectorizer(TfidfVectorizer):
     def __init__(self):
@@ -20,8 +23,10 @@ class TfidfStemVectorizer(TfidfVectorizer):
     def build_analyzer(self):
         return lambda doc: (stemmer.stem(word) for word in self.analyze(doc))
 
+
 def usage():
     print("usage: " + sys.argv[0] + " -d dictionary-file -p postings-file -q file-of-queries -o output-file-of-results")
+
 
 def find_docs_for_phrasal_query(query, vectorizer, dictionary):
     # Assume query comes with the quotation marks, i.e. => "hello there world"
@@ -43,6 +48,7 @@ def find_docs_for_phrasal_query(query, vectorizer, dictionary):
 
     return final_result
 
+
 def process_query(query, vectorizer, positions):
     queries = query.split(" AND ") # look for ANDs if any
     phrases_doc_set = set()
@@ -61,12 +67,16 @@ def process_query(query, vectorizer, positions):
                 phrases_doc_set = set.intersection(phrases_doc_set, phrasal_docs)
             phrase_count += 1
         else:
+            print("orig:", query)
+            if query_synonym_expansion:
+                query = query_synonym_extension(query)
             non_phrasal_query += query
+            print("expanded", query)
             if i != len(queries) - 1:
                 non_phrasal_query += " "
     return (non_phrasal_query, list(phrases_doc_set))
 
-# alpha beta are args to be adjusted
+# alpha beta are parameters to be adjusted
 # varargs are vectors of docs of inputs from query
 def rocchio_calculation(alpha, beta, query_vec, doc_vecs):
     weighted_query_np = query_vec * alpha
@@ -74,6 +84,30 @@ def rocchio_calculation(alpha, beta, query_vec, doc_vecs):
     weighted_mean_np = mean_np * beta
     final_result = weighted_query_np + weighted_mean_np
     return final_result
+
+
+# Adding synonyms to expand query
+# Capped to 1 synonym per word to minimise leading the query
+# 2xOriginal terms to ensure original terms have higher weightage than synonyms
+def query_synonym_extension(query):
+    list_of_original_terms = nltk.word_tokenize(query)
+    new_query_list = []
+
+    for term in list_of_original_terms:
+        new_query_list.append(term)
+        one_term_cap = False
+        for syn in wordnet.synsets(term):
+            if one_term_cap:
+                break
+            for lemm in syn.lemma_names():
+                if lemm not in list_of_original_terms:
+                    new_query_list.append(lemm)
+                    one_term_cap = True
+                    break
+
+    new_query = " ".join(term for term in new_query_list)
+    return new_query
+
 
 def write_to_file(result_docs, results_file):
     print(len(result_docs), "matching documents found.")
@@ -88,6 +122,7 @@ def write_to_file(result_docs, results_file):
             if doc_count != len(result_docs):
                 write_string += " "
         output_file.write(write_string)
+
 
 def run_search(dict_file, postings_file, queries_file, results_file):
     start_time = time.time()

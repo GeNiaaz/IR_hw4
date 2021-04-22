@@ -58,4 +58,6 @@ python search.py -d dictionary-file -p postings-file -q query-file -o output-fil
 
 # Reference
 
+https://www.datasciencelearner.com/how-to-get-synonyms-and-antonyms-using-python-nltk/
+
 [CS3245 Homework 4](https://www.comp.nus.edu.sg/~cs3245/hw4-intelllex.html)
