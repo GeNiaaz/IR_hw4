@@ -12,7 +12,7 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 query_refinement = False
-query_synonym_expansion = False
+query_synonym_expansion = True
 
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 class TfidfStemVectorizer(TfidfVectorizer):
@@ -51,6 +51,7 @@ def find_docs_for_phrasal_query(query, vectorizer, dictionary):
 
 def process_query(query, vectorizer, positions):
     queries = query.split(" AND ") # look for ANDs if any
+    phrases_found = False
     phrases_doc_set = set()
     phrase_count = 0
     non_phrasal_query = ""
@@ -59,6 +60,7 @@ def process_query(query, vectorizer, positions):
         query = queries[i]
         if (query.startswith('"') and query.endswith('"')) or (query.startswith("'") and query.endswith("'")):
             # phrasal query
+            phrases_found = True
             query = query[1:-1]
             phrasal_docs = find_docs_for_phrasal_query(query, vectorizer, positions)
             if phrase_count == 0:
@@ -67,18 +69,17 @@ def process_query(query, vectorizer, positions):
                 phrases_doc_set = set.intersection(phrases_doc_set, phrasal_docs)
             phrase_count += 1
         else:
-            print("orig:", query)
             if query_synonym_expansion:
                 query = query_synonym_extension(query)
             non_phrasal_query += query
-            print("expanded", query)
             if i != len(queries) - 1:
                 non_phrasal_query += " "
-    return (non_phrasal_query, list(phrases_doc_set))
+    return (non_phrasal_query, list(phrases_doc_set), phrases_found)
 
 # alpha beta are parameters to be adjusted
 # varargs are vectors of docs of inputs from query
 def rocchio_calculation(alpha, beta, query_vec, doc_vecs):
+    print("refining query with Rocchio algorithm...")
     weighted_query_np = query_vec * alpha
     mean_np = np.mean(doc_vecs, axis=0)
     weighted_mean_np = mean_np * beta
@@ -90,6 +91,7 @@ def rocchio_calculation(alpha, beta, query_vec, doc_vecs):
 # Capped to 1 synonym per word to minimise leading the query
 # 2xOriginal terms to ensure original terms have higher weightage than synonyms
 def query_synonym_extension(query):
+    print("expanding query with synonyms...")
     list_of_original_terms = nltk.word_tokenize(query)
     new_query_list = []
 
@@ -105,7 +107,7 @@ def query_synonym_extension(query):
                     one_term_cap = True
                     break
 
-    new_query = " ".join(term for term in new_query_list)
+    new_query = " ".join(term for term in new_query_list).strip()
     return new_query
 
 
@@ -142,7 +144,7 @@ def run_search(dict_file, postings_file, queries_file, results_file):
     with open(queries_file) as query_file:
         content = query_file.readlines()
         unprocessed_query = content[0].strip()
-        (query, phrases_doc_list) = process_query(unprocessed_query, vectorizer, positions)
+        (query, phrases_doc_list, phrases_found) = process_query(unprocessed_query, vectorizer, positions)
         for i in range(1, len(content)):
             relevant_cols.append(docs.index(content[i].strip()))
 
@@ -164,7 +166,8 @@ def run_search(dict_file, postings_file, queries_file, results_file):
         sorted_cosines = cosine_similarities.argsort()[::-1]
         result_docs = [docs[doc] for doc in sorted_cosines if cosine_similarities[doc] != 0]
 
-        if query != unprocessed_query: # i.e. phrases were found, intersect results w/ phrase doc set
+        if phrases_found: # i.e. phrases were found, intersect results w/ phrase doc set
+            print('test')
             result_docs = [doc for doc in result_docs if doc in phrases_doc_list]
 
         write_to_file(result_docs, results_file)

@@ -44,17 +44,18 @@ def build_index(in_dir, out_dict, out_postings):
             court = line[4]
             text = title + " " + court + " " + line[2]
 
-            position_count = 0
-            for word in vectorizer.build_analyzer()(text):
-                if word not in positions:
-                    positions[word] = {}
-                if doc_id not in positions[word]:
-                    positions[word][doc_id] = []
-                positions[word][doc_id].append(position_count)
-                position_count += 1
+            if doc_id not in docs:
+                position_count = 0
+                for word in vectorizer.build_analyzer()(text):
+                    if word not in positions:
+                        positions[word] = {}
+                    if doc_id not in positions[word]:
+                        positions[word][doc_id] = []
+                    positions[word][doc_id].append(position_count)
+                    position_count += 1
 
-            docs.append(doc_id)
-            corpus.append(text)
+                docs.append(doc_id)
+                corpus.append(text)
         dataset.close()
 
     print("building vector space matrix...")

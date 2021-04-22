@@ -18,4 +18,4 @@ def has_duplicates(postings):
 def get_duplicates(postings):
     return [item for item, count in collections.Counter(postings).items() if count > 1]
 
-check_results('results.txt')
+check_results('output.txt')
