@@ -26,9 +26,9 @@ The searching process begins with the unpickling of the four structures (the vec
 
 Firstly, the query string is processed to separate AND operators, phrasal queries (which are found between single or double apostrophes) and free text within the query. Once phrases in the query are identified, the documents that match each phrase within the query are retrieved using the positional index created earlier, using the following procedure:
 
-1. For each query word in the phrase, find the set of relevant docs that contain the word and merge (find intersection of) these sets in increasing size.
-2. For each doc ID in the merged set, for each query word, get the positional indexes list and shift each index back by the query word's index position in the phrase, and merge with the shifted list of every subsequent query word. This will uncover the docs that contain the exact query phrase, with the merged positions being the positional index of the first query word.
-3. The list of docs containing the query phrase is returned.
+1. For each query word in the phrase, find the set of relevant docs that contain the word and merge (find intersection of) these sets.
+2. For each doc ID in the merged set, check if the phrase exist using the relative positional indexes of the query words.
+3. Return the list of docs containing the query phrase.
 
 If multiple phrases exist in the query, separated by an AND operator, the list of documents returned by each phrase are intersected with each other to only return the common documents between those phrases. Thus, the phrasal components of the query are handled first. If the query also contains non-phrasal elements (i.e. free text), they are separately handled using the vector-space matrix created earlier.
 
