@@ -40,9 +40,9 @@ def build_index(in_dir, out_dict, out_postings):
             print("\treading line", column_no); column_no += 1
             doc_id = line[0]
             title = line[1]
-            text = line[2]
             date = line[3]
             court = line[4]
+            text = title + " " + court + " " + line[2]
 
             position_count = 0
             for word in vectorizer.build_analyzer()(text):
