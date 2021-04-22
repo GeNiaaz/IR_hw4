@@ -10,6 +10,7 @@ from scipy import mean
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
+query_refinement = False
 stemmer = nltk.stem.snowball.SnowballStemmer("english")
 class TfidfStemVectorizer(TfidfVectorizer):
     def __init__(self):
@@ -118,8 +119,11 @@ def run_search(dict_file, postings_file, queries_file, results_file):
         write_to_file(relevant_cols, results_file)
     else:
         query_vector = vectorizer.transform([query])
-        relevant_vectors = matrix[relevant_cols, :]
-        refined_vector = rocchio_calculation(0.7, 0.3, query_vector, relevant_vectors)
+        if query_refinement:
+            relevant_vectors = matrix[relevant_cols, :]
+            refined_vector = rocchio_calculation(0.7, 0.3, query_vector, relevant_vectors)
+        else:
+            refined_vector = query_vector
 
         cosine_similarities = cosine_similarity(refined_vector, matrix).flatten()
         sorted_cosines = cosine_similarities.argsort()[::-1]
