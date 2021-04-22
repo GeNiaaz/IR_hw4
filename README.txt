@@ -34,7 +34,14 @@ If multiple phrases exist in the query, separated by an AND operator, the list o
 
 For free text, the vectorizer created during indexing is used to transform the free-text query into a 1xn vector (where n represents the length of vocabulary present in the dataset), with normalized tf-idf scores for each word present in the query. Words that exist in the dataset vocabulary, but not in the query, will naturally have a td-idf score of 0. The scikit-learn function cosine_similarity is then used to compute the normalized cosine score for that vector, and subsequently find the document vectors in the vector-space matrix that have the closest score (i.e. the greatest cosine similarity) with the score of the query vector. The document vectors in the matrix are then sorted in order of their cosine similarity with the query vector, and written to the output file in that order. Document vectors with a similarity score of 0 are not written to output.
 
-We experimented with query refinement by implementing the Rocchio algorithm using the relevance judgments. Given the list of documents that are known to be relevant in the query, we retrieved the 1xn document vectors for those documents from our vector space matrix, and calculated the mean of those vectors to retrieve their centroid. We then assigned a weight of 0.7 to the query vector and a weight of 0.3 to the centroid, and added them together to obtain a theoretically optimized query vector. We chose to assign more weight to the query vector, as we knew the number of relevance judgments would be low; we did not want to risk skewing the query vector significantly to potentially obtain an incorrect query vector. 
+QUERY REFINEMENT ==
+
+We experimented with query refinement by implementing the Rocchio algorithm using the relevance judgments. Given the list of documents that are known to be relevant in the query, we retrieved the 1xn document vectors for those documents from our vector space matrix, and calculated the mean of those vectors to retrieve their centroid. We then assigned a weight of 0.7 to the query vector and a weight of 0.3 to the centroid which was the best result we got experimentally, and added them together to obtain a theoretically optimized query vector. We chose to assign more weight to the query vector, as we knew the number of relevance judgments would be low; we did not want to risk skewing the query vector significantly to potentially obtain an incorrect query vector.
+
+We implemented another query refinement technique which employed synonyms to expand the query. This allowed us to have more useful results as terms with similar meanings are able to be searched for as well. Initially, the expanded query included many terms from synonym terms which were each generated from the original term. We then changed it to one synonym per term to prevent the synonym terms from skewing the results too much. We made every instance of the original term appear twice as often, such that synonym terms are weighted less. However, with the synonym terms being at most as many as the original terms, we decided to keep the original terms to appear only once.
+
+We decided in the end to keep synonym based query refinement as it gave us more reliable results.
+
 
 
 == Files included with this submission ==
@@ -43,8 +50,8 @@ List the files in your submission here and provide a short 1 line
 description of each file.  Make sure your submission's files are named
 and formatted correctly.
 
-README.txt: High-level documentation about our solution 
-index.py: Source code for indexing 
+README.txt: High-level documentation about our solution
+index.py: Source code for indexing
 search.py: Source code for searching
 dictionary.txt: Indexed dictionary of terms in the legal case corpus
 postings.txt: Indexed postings with tf-idf score and positional indexes of terms in the legal case corpus
@@ -53,7 +60,7 @@ postings.txt: Indexed postings with tf-idf score and positional indexes of terms
 
 Please put a "x" (without the double quotes) into the bracket of the appropriate statement.
 
-[x] We, A0181059A-A0205280R-A0200007H-A0200161E, certify that we have followed the CS3245 Information Retrieval class guidelines for homework assignments.  In particular, we expressly vow that we have followed the Facebook rule in discussing with others in doing the assignment and did not take notes (digital or printed) from the discussions.  
+[x] We, A0181059A-A0205280R-A0200007H-A0200161E, certify that we have followed the CS3245 Information Retrieval class guidelines for homework assignments.  In particular, we expressly vow that we have followed the Facebook rule in discussing with others in doing the assignment and did not take notes (digital or printed) from the discussions.
 
 
 == References ==
@@ -61,3 +68,4 @@ Please put a "x" (without the double quotes) into the bracket of the appropriate
 CS3245 lecture slides :)
 scikit-learn.org for scikit-learn documentation
 StackOverflow for pesky debugging issues
+https://www.datasciencelearner.com/how-to-get-synonyms-and-antonyms-using-python-nltk/
